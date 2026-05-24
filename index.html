@@ -432,8 +432,6 @@ document.getElementById('subScore').addEventListener('click',async()=>{
   errEl.style.display='none';
   document.getElementById('subScore').textContent='SAVING...';
   await saveLB({name,email,score,level,ts:Date.now()});
-  // wait briefly for Notion write to complete before fetching leaderboard
-  await new Promise(res=>setTimeout(res,2000));
   const lb=await getLB();
   renderLB(lb,'lbAfter');
   showScreen('sLB');
