@@ -234,8 +234,8 @@ let W,H,dpr=Math.min(window.devicePixelRatio||1,2);
 function resize(){const r=canvas.getBoundingClientRect();W=r.width;H=r.height;canvas.width=Math.round(W*dpr);canvas.height=Math.round(H*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);}
 
 const DEFAULT_PW='nrolled2024',PW_KEY='topservers_adminpw';
-const SUBMIT_URL='https://script.google.com/macros/s/AKfycbwBc68u9NRlO7inL4Xa7czrQJ4Hf0-sfCX42LG_8Lro7oulrGGiOt5882NGEHc_ILPP/exec';
-const LEADERBOARD_URL='https://script.google.com/macros/s/AKfycbwBc68u9NRlO7inL4Xa7czrQJ4Hf0-sfCX42LG_8Lro7oulrGGiOt5882NGEHc_ILPP/exec';
+const SUBMIT_URL='https://rodrigoborges.app.n8n.cloud/webhook/top-servers-submit';
+const LEADERBOARD_URL='https://rodrigoborges.app.n8n.cloud/webhook/top-servers-leaderboard';
 async function getAdminPw(){try{const r=await window.storage.get(PW_KEY,false);return r?r.value:DEFAULT_PW;}catch{return DEFAULT_PW;}}
 async function setAdminPw(pw){try{await window.storage.set(PW_KEY,pw,false);}catch{}}
 
