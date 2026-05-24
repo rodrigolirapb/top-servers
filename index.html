@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Top Servers by Nrolled</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;touch-action:manipulation;-webkit-tap-highlight-color:transparent;}
+body{background:#0a0a0f;color:#fff;font-family:'Courier New',monospace;overflow:hidden;height:100dvh;display:flex;flex-direction:column;align-items:center;}
+#gW{width:100%;max-width:420px;height:100dvh;display:flex;flex-direction:column;position:relative;}
+
+/* header */
+#hdr{display:flex;justify-content:space-between;align-items:center;padding:8px 14px;background:#0d0d18;border-bottom:1px solid #2a2a3a;flex-shrink:0;height:46px;}
+#hdr .brand{display:flex;align-items:center;gap:7px;cursor:pointer;}
+#hdr .brandtxt{font-size:10px;color:#f5c800;letter-spacing:2px;font-weight:bold;}
+#hdr .title{font-size:12px;color:#fff;letter-spacing:1px;}
+#stats{display:flex;gap:12px;align-items:center;}
+#stats span{font-size:11px;color:#888;}
+#stats b{color:#f5c800;}
+
+/* canvas */
+canvas{display:block;flex:1;width:100%;image-rendering:pixelated;min-height:0;}
+
+/* controls — always 3 rows when playing, 1 row otherwise */
+#ctrls{display:flex;flex-direction:column;gap:8px;padding:8px 12px;background:#0d0d18;border-top:1px solid #2a2a3a;flex-shrink:0;}
+#rowMove{display:flex;gap:8px;}
+#rowPause{display:none;gap:8px;}
+#rowPause.show{display:flex;}
+
+.cb{flex:1;height:58px;border:2px solid #2a2a4a;border-radius:10px;background:#141428;color:#fff;font-size:24px;display:flex;align-items:center;justify-content:center;user-select:none;-webkit-user-select:none;cursor:pointer;min-width:0;}
+.cb:active{background:#2a2a4a;}
+
+#fBtn{flex:1.6;height:58px;background:#c89f00;border:2px solid #f5c800;border-radius:10px;font-size:12px;letter-spacing:1px;color:#0a0a0f;font-family:'Courier New',monospace;font-weight:bold;min-width:0;display:flex;align-items:center;justify-content:center;}
+#fBtn:active{background:#f5c800;}
+
+#pauseBtn{flex:1;height:44px;background:#141428;border:2px solid #3a3a5a;border-radius:10px;color:#ccc;font-family:'Courier New',monospace;font-size:12px;letter-spacing:1px;font-weight:bold;display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;min-width:0;}
+#pauseBtn:active{background:#2a2a4a;}
+#endBtn{flex:1;height:44px;background:#1a0000;border:2px solid #ff4a4a;border-radius:10px;color:#ff4a4a;font-family:'Courier New',monospace;font-size:12px;letter-spacing:1px;font-weight:bold;display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;min-width:0;}
+#endBtn:active{background:#2a0000;}
+
+/* overlay */
+#ov{position:absolute;inset:0;background:rgba(8,8,14,0.98);display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:0 22px 20px;z-index:10;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+#ov input{width:100%;max-width:300px;padding:11px 14px;background:#141428;border:1px solid #2a2a4a;border-radius:8px;color:#fff;font-family:'Courier New',monospace;font-size:14px;outline:none;}
+#ov input:focus{border-color:#f5c800;}
+#ov button{width:100%;max-width:300px;padding:13px;background:#c89f00;border:none;border-radius:8px;color:#0a0a0f;font-family:'Courier New',monospace;font-size:12px;letter-spacing:1px;cursor:pointer;font-weight:bold;}
+#ov button:active{background:#f5c800;}
+#ov button.sec{background:transparent;border:1px solid #2a2a4a;color:#888;font-weight:normal;}
+#ov button.sec:active{background:#1a1a2a;}
+#ov button.dan{background:#2a0000;border:1px solid #ff4a4a;color:#ff4a4a;font-weight:normal;}
+#ov button.dan:active{background:#3a0000;}
+#ov button.suc{background:#003a00;border:1px solid #00dd88;color:#00dd88;font-weight:normal;}
+.lb-row{display:flex;justify-content:space-between;align-items:center;padding:7px 10px;border-radius:5px;font-size:12px;margin-bottom:4px;background:#141428;}
+.lb-row.gold{background:#1e1600;color:#f5c800;}
+.lb-row .rank{width:24px;flex-shrink:0;}
+.lb-row .lname{flex:1;padding:0 8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.lb-row .llvl{font-size:10px;color:#666;margin-right:6px;flex-shrink:0;}
+.lb-row .lscore{color:#f5c800;font-weight:bold;flex-shrink:0;}
+.hidden{display:none!important;}
+#mf{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:14px;color:#f5c800;letter-spacing:2px;pointer-events:none;opacity:0;transition:opacity 0.3s;z-index:5;text-align:center;}
+.asec{width:100%;max-width:340px;background:#0d0d18;border:1px solid #2a2a3a;border-radius:10px;padding:14px;margin-top:10px;}
+.asec h3{font-size:10px;color:#f5c800;letter-spacing:2px;margin-bottom:10px;}
+.ar{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid #1a1a2a;font-size:11px;}
+.ar:last-child{border-bottom:none;}
+.an{color:#ccc;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:90px;}
+.ae{color:#f5c800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100px;font-size:10px;}
+.as2{color:#00dd88;font-weight:bold;flex-shrink:0;}
+.atag{font-size:9px;padding:2px 5px;border-radius:4px;background:#1e1600;color:#f5c800;margin-left:3px;flex-shrink:0;}
+.cbox{background:#1a0000;border:1px solid #ff4a4a;border-radius:8px;padding:14px;width:100%;max-width:300px;text-align:center;margin-top:8px;}
+.cbox p{color:#ff8888;font-size:12px;margin-bottom:12px;line-height:1.5;}
+.br{display:flex;gap:8px;width:100%;}
+.br button{flex:1;}
+</style>
+</head>
+<body>
+<div id="gW">
+  <div id="hdr">
+    <div class="brand" id="adminTrigger">
+      <svg width="28" height="28" viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="20" fill="#c89f00"/><text x="20" y="27" text-anchor="middle" font-family="'Courier New',monospace" font-weight="bold" font-size="22" fill="#0a0a0f">N</text></svg>
+      <span class="brandtxt">NROLLED</span>
+    </div>
+    <div class="title">TOP SERVERS</div>
+    <div id="stats">
+      <span>LV<b id="lvD">1</b></span>
+      <span>♥<b id="liD">3</b></span>
+      <span><b id="scD">0</b></span>
+    </div>
+  </div>
+
+  <canvas id="gc"></canvas>
+  <div id="mf"></div>
+
+  <div id="ctrls">
+    <div id="rowMove">
+      <div class="cb" id="lBtn">←</div>
+      <div id="fBtn">SERVE</div>
+      <div class="cb" id="rBtn">→</div>
+    </div>
+    <div id="rowPause">
+      <div id="pauseBtn">⏸ PAUSE</div>
+      <div id="endBtn">✕ END GAME</div>
+    </div>
+  </div>
+
+  <div id="ov">
+    <!-- START -->
+    <div id="sStart" style="display:flex;flex-direction:column;align-items:center;width:100%;">
+      <div style="padding-top:16px;padding-bottom:20px;">
+        <canvas id="serverThumb" width="32" height="32" style="display:none;"></canvas>
+        <canvas id="pixelCanvas" width="160" height="120" style="width:260px;height:195px;image-rendering:pixelated;display:block;"></canvas>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:14px;width:100%;max-width:300px;">
+        <div style="text-align:center;">
+          <div style="font-size:24px;color:#f5c800;letter-spacing:3px;font-weight:bold;">TOP SERVERS</div>
+          <div style="font-size:10px;color:#c89f00;letter-spacing:4px;margin-top:5px;">by NROLLED</div>
+        </div>
+        <p style="font-size:12px;color:#aaa;text-align:center;line-height:1.7;">You're a server. Customers flood in — serve them before demand swallows the house.</p>
+        <p style="font-size:11px;color:#c89f00;text-align:center;line-height:1.6;">Serve the customers. Avoid overcapacity.</p>
+        <button id="startBtn">START SERVING</button>
+        <div style="width:100%;display:flex;flex-direction:column;align-items:center;gap:8px;">
+          <canvas id="serverBadge1" width="32" height="40" style="image-rendering:pixelated;width:64px;height:80px;"></canvas>
+          <div id="lbStart" style="width:100%;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- GAME OVER -->
+    <div id="sGO" class="hidden" style="display:flex;flex-direction:column;align-items:center;gap:14px;width:100%;padding-top:32px;">
+      <div style="color:#ff4a4a;font-size:14px;letter-spacing:3px;">GAME OVER</div>
+      <div style="text-align:center;">
+        <div style="font-size:11px;color:#888;margin-bottom:6px;letter-spacing:1px;">YOUR SCORE</div>
+        <div style="font-size:48px;color:#f5c800;line-height:1;" id="fScore">0</div>
+        <div style="font-size:11px;color:#888;margin-top:6px;">LEVEL <span id="fLvl" style="color:#fff;">1</span></div>
+      </div>
+      <p style="font-size:12px;color:#aaa;text-align:center;max-width:260px;line-height:1.6;">Register your score to enter the leaderboard!</p>
+      <div style="display:flex;flex-direction:column;gap:10px;width:100%;max-width:300px;align-items:center;">
+        <input id="rName" type="text" placeholder="Your name" maxlength="20" autocomplete="off"/>
+        <input id="rEmail" type="email" placeholder="your@email.com" maxlength="50" autocomplete="off"/>
+        <div id="subErr" style="display:none;color:#ff4a4a;font-size:11px;text-align:center;"></div>
+        <button id="subScore">SUBMIT SCORE</button>
+        <button class="sec" id="skipScore">SKIP &amp; PLAY AGAIN</button>
+      </div>
+    </div>
+
+    <!-- ON BOARD -->
+    <div id="sLB" class="hidden" style="display:flex;flex-direction:column;align-items:center;gap:14px;width:100%;padding-top:32px;">
+      <div style="color:#00dd88;font-size:14px;letter-spacing:2px;margin-bottom:4px;">SCORE REGISTERED!</div>
+      <canvas id="serverBadge2" width="32" height="40" style="image-rendering:pixelated;width:64px;height:80px;"></canvas>
+      <div id="lbAfter" style="width:100%;max-width:300px;"></div>
+      <button id="paBtn">PLAY AGAIN</button>
+    </div>
+
+    <!-- PAUSE -->
+    <div id="sPause" class="hidden" style="display:flex;flex-direction:column;align-items:center;gap:20px;width:100%;padding-top:48px;">
+      <div style="color:#f5c800;font-size:20px;letter-spacing:4px;">PAUSED</div>
+      <div style="font-size:12px;color:#888;text-align:center;">Take a breath. The customers can wait.</div>
+      <button id="resumeBtn">▶ RESUME</button>
+      <button class="sec" id="pauseEndBtn">✕ END GAME</button>
+    </div>
+
+    <!-- ADMIN LOGIN -->
+    <div id="sAL" class="hidden" style="display:flex;flex-direction:column;align-items:center;gap:14px;width:100%;padding-top:40px;">
+      <div style="color:#f5c800;font-size:14px;letter-spacing:2px;">ADMIN ACCESS</div>
+      <p style="font-size:12px;color:#aaa;text-align:center;line-height:1.6;">Enter your admin password to continue.</p>
+      <input id="aPwIn" type="password" placeholder="Password" autocomplete="off"/>
+      <div id="aErr" style="color:#ff4a4a;font-size:11px;display:none;">Incorrect password.</div>
+      <button id="aLoginBtn">ENTER</button>
+      <button class="sec" id="aBack">BACK</button>
+    </div>
+
+    <!-- ADMIN PANEL -->
+    <div id="sAdmin" class="hidden" style="display:flex;flex-direction:column;align-items:center;width:100%;padding-top:16px;padding-bottom:24px;">
+      <div style="color:#f5c800;font-size:14px;letter-spacing:2px;margin-bottom:4px;">CONTROL CENTER</div>
+      <div class="asec">
+        <h3>REGISTRATIONS <span id="regCnt" class="atag">0</span></h3>
+        <div id="aRegList"></div>
+        <div style="margin-top:12px;display:flex;gap:8px;">
+          <button class="suc" id="expCSV" style="flex:1;padding:10px;font-size:11px;">EXPORT CSV</button>
+          <button class="dan" id="showClr" style="flex:1;padding:10px;font-size:11px;">CLEAR ALL</button>
+        </div>
+      </div>
+      <div class="cbox hidden" id="confClr">
+        <p>This will permanently erase all scores and registrations. Are you sure?</p>
+        <div class="br"><button class="dan" id="confYes">YES, ERASE</button><button class="sec" id="confNo">CANCEL</button></div>
+      </div>
+      <div class="asec">
+        <h3>CHANGE PASSWORD</h3>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <input id="pw1" type="password" placeholder="New password" style="width:100%;max-width:100%;"/>
+          <input id="pw2" type="password" placeholder="Confirm new password" style="width:100%;max-width:100%;"/>
+          <div id="pwMsg" style="font-size:11px;min-height:14px;"></div>
+          <button id="chPwBtn" style="max-width:100%;padding:10px;font-size:11px;">UPDATE PASSWORD</button>
+        </div>
+      </div>
+      <div class="asec">
+        <h3>EVENT STATUS</h3>
+        <div class="ar"><span style="color:#888;">Top score</span><span id="aTop" style="color:#00dd88;font-weight:bold;">—</span></div>
+        <div class="ar"><span style="color:#888;">Top player</span><span id="aTopP" style="color:#fff;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">—</span></div>
+        <div class="ar"><span style="color:#888;">Total entries</span><span id="aTot" style="color:#fff;">0</span></div>
+      </div>
+      <button class="sec" id="aLogout" style="max-width:300px;margin-top:14px;">LOGOUT</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── pixel art ────────────────────────────────────────────────────────────────
+function drawPixelArt(){
+  const pc=document.getElementById('pixelCanvas'),cx=pc.getContext('2d');
+  const W=160,H=120;
+  cx.fillStyle='#0a0a0f';cx.fillRect(0,0,W,H);
+  cx.fillStyle='#fff';
+  [[8,5],[20,18],[45,8],[70,3],[95,12],[120,6],[140,20],[155,4],[30,30],[80,25],[110,30],[150,35],[5,40],[60,45],[130,15]].forEach(([x,y])=>cx.fillRect(x,y,1,1));
+  cx.fillStyle='#f5c800';
+  [[25,10],[90,20],[145,10]].forEach(([x,y])=>cx.fillRect(x,y,1,1));
+  cx.fillStyle='#1a1a3a';cx.fillRect(0,108,W,2);
+  const serverSprite=['  YYYYY   ',' YYYYYYY  ',' YYYYYYY  ',' YWWWYY   ','  YYYYY   ',' YYYYYYY  ','YYYYYYYYY ','YYYYYYYYY ','YYYYYYYYY ',' BBBBBBB  ',' BWWWWWB  ',' BBBBBBB  ','  BBBBB   ','  B   B   '];
+  const sc={Y:'#c89f00',W:'#ffffff',B:'#2a2a6a',' ':'transparent'};
+  const px=75,py=88;
+  serverSprite.forEach((row,r)=>row.split('').forEach((ch,c)=>{if(ch===' ')return;cx.fillStyle=sc[ch];cx.fillRect(px+c,py+r,1,1);}));
+  const enemyColors=[['#ff4444','#ff8888'],['#ff7700','#ffaa44'],['#ff2255','#ff6688']];
+  const custSprite=[' OOO ','OOOOO','OHLHO','OOOOO',' OOO ',' OBO ','OBBBO'];
+  [[20,10],[40,10],[60,10],[80,10],[100,10],[120,10],[140,10],[20,28],[40,28],[60,28],[80,28],[100,28],[120,28],[140,28],[20,46],[40,46],[60,46],[80,46],[100,46],[120,46],[140,46]].forEach(([ex,ey],idx)=>{
+    const row=Math.floor(idx/7);const[main,hi]=enemyColors[row%3];const cm={O:main,H:hi,L:hi,B:main,' ':'transparent'};
+    custSprite.forEach((r,ri)=>r.split('').forEach((ch,ci)=>{if(ch===' ')return;cx.fillStyle=cm[ch]||main;cx.fillRect(ex+ci,ey+ri,1,1);}));
+  });
+  [[78,65],[78,50],[78,35]].forEach(([lx,ly])=>{cx.fillStyle='#00ffcc';cx.fillRect(lx,ly,5,5);cx.fillStyle='#0a0a0f';cx.fillRect(lx+1,ly+1,1,3);cx.fillRect(lx+3,ly+1,1,3);cx.fillRect(lx+2,ly+2,1,1);});
+  [[35,98],[80,98],[125,98]].forEach(([sx,sy])=>{cx.fillStyle='#3a2aaa';cx.fillRect(sx,sy,18,6);cx.fillStyle='#5a4aff';cx.fillRect(sx+1,sy+1,16,4);});
+  cx.fillStyle='rgba(0,0,0,0.18)';for(let y=0;y<H;y+=2)cx.fillRect(0,y,W,1);
+}
+
+// ── engine ───────────────────────────────────────────────────────────────────
+const canvas=document.getElementById('gc'),ctx=canvas.getContext('2d');
+let W,H,dpr=Math.min(window.devicePixelRatio||1,2);
+function resize(){const r=canvas.getBoundingClientRect();W=r.width;H=r.height;canvas.width=Math.round(W*dpr);canvas.height=Math.round(H*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);}
+
+const DEFAULT_PW='nrolled2024',PW_KEY='topservers_adminpw';
+const SUBMIT_URL='https://rodrigoborges.app.n8n.cloud/webhook/top-servers-submit';
+const LEADERBOARD_URL='https://rodrigoborges.app.n8n.cloud/webhook/top-servers-leaderboard';
+async function getAdminPw(){try{const r=await window.storage.get(PW_KEY,false);return r?r.value:DEFAULT_PW;}catch{return DEFAULT_PW;}}
+async function setAdminPw(pw){try{await window.storage.set(PW_KEY,pw,false);}catch{}}
+
+let state='idle',score=0,lives=3,level=1;
+let player,bullets,enemies,shields,particles;
+let enemyDir=1,enemySpeed,enemyDrop=false,shootCooldown=0,frameId,lastTime=0;
+let keys={left:false,right:false,fire:false};
+
+const sprPlayer=document.createElement('canvas');
+const sprEnemy=[];
+const sprLogo=document.createElement('canvas');
+
+function buildSprites(){
+  sprPlayer.width=48;sprPlayer.height=36;
+  const pc=sprPlayer.getContext('2d');
+  pc.fillStyle='#c89f00';pc.beginPath();pc.arc(24,11,10,0,Math.PI*2);pc.fill();
+  pc.fillRect(13,17,22,19);pc.fillStyle='#fff';pc.fillRect(18,22,12,8);
+  ['#ff6b6b','#ffaa44','#ff8844','#ff5566'].forEach(col=>{
+    const c=document.createElement('canvas');c.width=28;c.height=24;const cx=c.getContext('2d');
+    cx.fillStyle=col;cx.beginPath();cx.arc(14,7,6,0,Math.PI*2);cx.fill();cx.fillRect(9,11,10,12);
+    cx.fillStyle='rgba(255,255,255,0.18)';cx.fillRect(11,13,6,4);sprEnemy.push(c);
+  });
+  sprLogo.width=16;sprLogo.height=16;const lc=sprLogo.getContext('2d');
+  lc.fillStyle='#f5c800';lc.beginPath();lc.arc(8,8,7,0,Math.PI*2);lc.fill();
+  lc.fillStyle='#0a0a0f';lc.font='bold 9px Courier New';lc.textAlign='center';lc.textBaseline='middle';lc.fillText('N',8,8.5);
+}
+
+function initGame(){score=0;lives=3;level=1;setupLevel();updateHUD();}
+function setupLevel(){
+  player={x:W/2,y:H-28,w:Math.max(W*0.1,44),h:24,speed:W*0.0038};
+  bullets=[];particles=[];enemyDir=1;enemySpeed=0.016+(level-1)*0.012;enemyDrop=false;
+  spawnEnemies();spawnShields();
+}
+function spawnEnemies(){
+  enemies=[];const cols=8,rows=3+Math.min(level-1,2);
+  const ex=W*0.07,ey=H*0.11,gapX=(W-ex*2)/(cols-1),gapY=Math.min(H*0.062,36);
+  for(let r=0;r<rows;r++)for(let c=0;c<cols;c++)enemies.push({x:ex+c*gapX,y:ey+r*gapY,w:22,h:20,alive:true,row:r%4});
+}
+function spawnShields(){
+  shields=[];const count=Math.min(level-1,4);if(!count)return;const sy=H-H*0.17;
+  for(let i=0;i<count;i++)shields.push({x:(i+1)*W/(count+1),y:sy,w:34,h:16,hp:3});
+}
+function updateHUD(){document.getElementById('scD').textContent=score;document.getElementById('liD').textContent=lives;document.getElementById('lvD').textContent=level;}
+function flashMsg(t){const el=document.getElementById('mf');el.textContent=t;el.style.opacity='1';setTimeout(()=>el.style.opacity='0',900);}
+function spawnParticles(x,y,color,n=7){for(let i=0;i<n;i++){const a=Math.random()*Math.PI*2,s=1+Math.random()*2.5;particles.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:1,color});}}
+
+function gameLoop(ts){
+  if(state!=='playing')return;
+  const dt=Math.min((ts-lastTime)/16,3);lastTime=ts;update(dt);draw();frameId=requestAnimationFrame(gameLoop);
+}
+function update(dt){
+  shootCooldown=Math.max(0,shootCooldown-dt);
+  if(keys.left)player.x=Math.max(player.w/2,player.x-player.speed*dt*16);
+  if(keys.right)player.x=Math.min(W-player.w/2,player.x+player.speed*dt*16);
+  if(keys.fire&&shootCooldown<=0){bullets.push({x:player.x,y:player.y-player.h*0.5,vx:0,vy:-8,type:'p'});shootCooldown=22;}
+  bullets.forEach(b=>{b.x+=b.vx*dt;b.y+=b.vy*dt;});
+  bullets=bullets.filter(b=>b.y>-20&&b.y<H+20);
+  const alive=enemies.filter(e=>e.alive);
+  if(!alive.length){level++;flashMsg('LEVEL '+level+'!');setupLevel();updateHUD();return;}
+  let minX=Infinity,maxX=-Infinity;
+  alive.forEach(e=>{minX=Math.min(minX,e.x-e.w/2);maxX=Math.max(maxX,e.x+e.w/2);});
+  const spd=(enemySpeed+(level-1)*0.008)*dt;
+  if(maxX>=W-8&&enemyDir>0){enemyDir=-1;enemyDrop=true;}
+  if(minX<=8&&enemyDir<0){enemyDir=1;enemyDrop=true;}
+  enemies.forEach(e=>{if(!e.alive)return;e.x+=enemyDir*spd*16;if(enemyDrop)e.y+=13;});
+  if(enemyDrop)enemyDrop=false;
+  if(Math.random()<0.007*Math.min(level,4)&&alive.length){
+    const cols={};alive.forEach(e=>{const k=Math.round(e.x);if(!cols[k]||e.y>cols[k].y)cols[k]=e;});
+    const sh=Object.values(cols);if(sh.length){const s=sh[Math.floor(Math.random()*sh.length)];bullets.push({x:s.x,y:s.y+s.h/2,vx:0,vy:1.5+level*0.2,type:'e'});}
+  }
+  bullets=bullets.filter(b=>{
+    if(b.type==='p'){for(let e of enemies){if(!e.alive)continue;if(Math.abs(b.x-e.x)<e.w/2+5&&Math.abs(b.y-e.y)<e.h/2+5){e.alive=false;score+=(10+e.row*5);spawnParticles(e.x,e.y,'#ff6b6b');updateHUD();return false;}}}
+    for(let sh of shields){if(sh.hp<=0)continue;if(b.x>sh.x-sh.w/2&&b.x<sh.x+sh.w/2&&b.y>sh.y-sh.h/2&&b.y<sh.y+sh.h/2){sh.hp--;spawnParticles(b.x,b.y,'#3a3aaa',4);return false;}}
+    if(b.type==='e'){if(Math.abs(b.x-player.x)<player.w/2+6&&Math.abs(b.y-player.y)<player.h/2+6){lives--;spawnParticles(player.x,player.y,'#c89f00',10);updateHUD();if(lives<=0){endGame();return false;}flashMsg(lives+' LIVES LEFT');return false;}}
+    return true;
+  });
+  alive.forEach(e=>{if(e.y+e.h/2>=player.y-player.h)endGame();});
+  particles.forEach(p=>{p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=0.045*dt;});
+  particles=particles.filter(p=>p.life>0);
+}
+function draw(){
+  ctx.fillStyle='#0a0a0f';ctx.fillRect(0,0,W,H);
+  ctx.strokeStyle='rgba(20,20,40,0.8)';ctx.lineWidth=0.5;
+  for(let x=0;x<W;x+=32){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
+  for(let y=0;y<H;y+=32){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+  ctx.drawImage(sprPlayer,player.x-24,player.y-sprPlayer.height*0.8);
+  enemies.forEach(e=>{if(!e.alive)return;ctx.drawImage(sprEnemy[e.row],e.x-14,e.y-12);});
+  shields.forEach(sh=>{
+    if(sh.hp<=0)return;const a=sh.hp/3;
+    ctx.fillStyle=`rgba(90,58,0,${a*0.75})`;ctx.fillRect(sh.x-sh.w/2,sh.y-sh.h/2,sh.w,sh.h);
+    ctx.strokeStyle=`rgba(200,159,0,${a})`;ctx.lineWidth=1.5;ctx.strokeRect(sh.x-sh.w/2,sh.y-sh.h/2,sh.w,sh.h);
+  });
+  bullets.forEach(b=>{
+    if(b.type==='p')ctx.drawImage(sprLogo,b.x-8,b.y-8);
+    else{ctx.fillStyle='#ff6b6b';ctx.beginPath();ctx.arc(b.x,b.y,4,0,Math.PI*2);ctx.fill();}
+  });
+  particles.forEach(p=>{ctx.globalAlpha=p.life;ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(p.x,p.y,2.5,0,Math.PI*2);ctx.fill();});
+  ctx.globalAlpha=1;
+}
+
+function showScreen(id){
+  ['sStart','sGO','sLB','sPause','sAL','sAdmin'].forEach(s=>document.getElementById(s).classList.toggle('hidden',s!==id));
+  document.getElementById('ov').classList.remove('hidden');
+}
+function showPauseRow(show){document.getElementById('rowPause').classList.toggle('show',show);}
+
+function startGame(){
+  document.getElementById('ov').classList.add('hidden');
+  showPauseRow(true);
+  state='playing';initGame();lastTime=performance.now();frameId=requestAnimationFrame(gameLoop);
+}
+function pauseGame(){
+  if(state!=='playing')return;
+  state='paused';cancelAnimationFrame(frameId);showScreen('sPause');
+}
+function resumeGame(){
+  document.getElementById('ov').classList.add('hidden');
+  state='playing';lastTime=performance.now();frameId=requestAnimationFrame(gameLoop);
+}
+function endGame(){
+  state='gameover';cancelAnimationFrame(frameId);showPauseRow(false);
+  document.getElementById('fScore').textContent=score;document.getElementById('fLvl').textContent=level;showScreen('sGO');
+}
+
+async function getLB(){
+  try{
+    const r=await fetch(LEADERBOARD_URL,{
+      method:'GET',
+      headers:{'Accept':'application/json'}
+    });
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    const data=await r.json();
+    return data.leaderboard||[];
+  }catch(e){console.error('LB error',e);return[];}
+}
+async function saveLB(entry){
+  try{
+    const r=await fetch(SUBMIT_URL,{
+      method:'POST',
+      mode:'no-cors',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(entry)
+    });
+  }catch(e){console.error('Submit error',e);}
+}
+
+function renderLB(lb,cid,limit=10){
+  const el=document.getElementById(cid);if(!el)return;
+  if(!lb.length){el.innerHTML='<p style="color:#444;font-size:11px;text-align:center;padding:10px 0;">No scores yet. Be the first!</p>';return;}
+  el.innerHTML='<h3 style="font-size:10px;color:#f5c800;letter-spacing:2px;margin-bottom:10px;text-align:center;">LEADERBOARD</h3>';
+  lb.slice(0,limit).forEach((e,i)=>{
+    const row=document.createElement('div');row.className='lb-row'+(i===0?' gold':'');
+    row.innerHTML=`<span class="rank">${i===0?'🥇':i===1?'🥈':i===2?'🥉':`${i+1}.`}</span><span class="lname">${e.name}</span><span class="llvl">L${e.level}</span><span class="lscore">${e.score.toLocaleString()}</span>`;
+    el.appendChild(row);
+  });
+}
+function renderAdminRegs(lb){
+  const el=document.getElementById('aRegList');
+  document.getElementById('regCnt').textContent=lb.length;document.getElementById('aTot').textContent=lb.length;
+  if(!lb.length){document.getElementById('aTop').textContent='—';document.getElementById('aTopP').textContent='—';el.innerHTML='<p style="color:#444;font-size:11px;padding:6px 0;">No entries yet.</p>';return;}
+  const top=lb[0];document.getElementById('aTop').textContent=top.score.toLocaleString();document.getElementById('aTopP').textContent=top.name;
+  el.innerHTML='';
+  lb.forEach((e,i)=>{
+    const t=new Date(e.ts).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+    const row=document.createElement('div');row.className='ar';
+    row.innerHTML=`<span class="an">${i+1}. ${e.name}</span><span class="ae">${e.email||'—'}</span><span class="as2">${e.score.toLocaleString()}</span><span class="atag">${t}</span>`;
+    el.appendChild(row);
+  });
+}
+function exportCSV(lb){
+  const rows=lb.map((e,i)=>`${i+1},"${e.name}","${e.email||''}",${e.score},${e.level},"${new Date(e.ts).toLocaleString()}"`);
+  const blob=new Blob(['Rank,Name,Email,Score,Level,Time\n'+rows.join('\n')],{type:'text/csv'});
+  const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='topservers_leaderboard.csv';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
+}
+
+// ── events ───────────────────────────────────────────────────────────────────
+document.getElementById('startBtn').addEventListener('click',startGame);
+document.getElementById('pauseBtn').addEventListener('click',pauseGame);
+document.getElementById('endBtn').addEventListener('click',()=>{if(state==='playing'||state==='paused')endGame();});
+document.getElementById('resumeBtn').addEventListener('click',resumeGame);
+document.getElementById('pauseEndBtn').addEventListener('click',endGame);
+document.getElementById('skipScore').addEventListener('click',startGame);
+document.getElementById('paBtn').addEventListener('click',startGame);
+
+document.getElementById('subScore').addEventListener('click',async()=>{
+  const name=document.getElementById('rName').value.trim();
+  const email=document.getElementById('rEmail').value.trim();
+  const errEl=document.getElementById('subErr');
+  if(!name&&!email){errEl.textContent='Please enter your name and email.';errEl.style.display='block';return;}
+  if(!name){errEl.textContent='Please enter your name.';errEl.style.display='block';document.getElementById('rName').focus();return;}
+  if(!email){errEl.textContent='Please enter your email.';errEl.style.display='block';document.getElementById('rEmail').focus();return;}
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){errEl.textContent='Please enter a valid email address.';errEl.style.display='block';return;}
+  errEl.style.display='none';
+  document.getElementById('subScore').textContent='SAVING...';
+  await saveLB({name,email,score,level,ts:Date.now()});
+  // wait briefly for Notion write to complete before fetching leaderboard
+  await new Promise(res=>setTimeout(res,2000));
+  const lb=await getLB();
+  renderLB(lb,'lbAfter');
+  showScreen('sLB');
+  document.getElementById('subScore').textContent='SUBMIT SCORE';
+});
+
+let tapCount=0,tapTimer=null;
+document.getElementById('adminTrigger').addEventListener('click',()=>{
+  tapCount++;clearTimeout(tapTimer);tapTimer=setTimeout(()=>tapCount=0,600);
+  if(tapCount>=3){tapCount=0;document.getElementById('aPwIn').value='';document.getElementById('aErr').style.display='none';showScreen('sAL');if(state==='playing'){state='paused';cancelAnimationFrame(frameId);}}
+});
+document.getElementById('aLoginBtn').addEventListener('click',async()=>{
+  const input=document.getElementById('aPwIn').value,pw=await getAdminPw();
+  if(input===pw){document.getElementById('aErr').style.display='none';document.getElementById('confClr').classList.add('hidden');document.getElementById('pw1').value='';document.getElementById('pw2').value='';document.getElementById('pwMsg').textContent='';const lb=await getLB();renderAdminRegs(lb);showScreen('sAdmin');}
+  else document.getElementById('aErr').style.display='block';
+});
+document.getElementById('aPwIn').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('aLoginBtn').click();});
+document.getElementById('aBack').addEventListener('click',()=>showScreen('sStart'));
+document.getElementById('aLogout').addEventListener('click',async()=>{showPauseRow(false);showScreen('sStart');const lb=await getLB();renderLB(lb,'lbStart');});
+document.getElementById('showClr').addEventListener('click',()=>document.getElementById('confClr').classList.remove('hidden'));
+document.getElementById('confNo').addEventListener('click',()=>document.getElementById('confClr').classList.add('hidden'));
+document.getElementById('confYes').addEventListener('click',async()=>{await saveLB([]);document.getElementById('confClr').classList.add('hidden');renderAdminRegs([]);});
+document.getElementById('expCSV').addEventListener('click',async()=>{const lb=await getLB();exportCSV(lb);});
+document.getElementById('chPwBtn').addEventListener('click',async()=>{
+  const p1=document.getElementById('pw1').value,p2=document.getElementById('pw2').value,msg=document.getElementById('pwMsg');
+  if(!p1){msg.style.color='#ff4a4a';msg.textContent='Password cannot be empty.';return;}
+  if(p1!==p2){msg.style.color='#ff4a4a';msg.textContent='Passwords do not match.';return;}
+  if(p1.length<6){msg.style.color='#ff4a4a';msg.textContent='Minimum 6 characters.';return;}
+  await setAdminPw(p1);msg.style.color='#00dd88';msg.textContent='Password updated.';
+  document.getElementById('pw1').value='';document.getElementById('pw2').value='';setTimeout(()=>msg.textContent='',3000);
+});
+
+// controls
+const lBtn=document.getElementById('lBtn'),rBtn=document.getElementById('rBtn'),fBtn=document.getElementById('fBtn');
+lBtn.addEventListener('touchstart',e=>{e.preventDefault();keys.left=true;},{passive:false});
+lBtn.addEventListener('touchend',e=>{e.preventDefault();keys.left=false;},{passive:false});
+rBtn.addEventListener('touchstart',e=>{e.preventDefault();keys.right=true;},{passive:false});
+rBtn.addEventListener('touchend',e=>{e.preventDefault();keys.right=false;},{passive:false});
+fBtn.addEventListener('touchstart',e=>{e.preventDefault();keys.fire=true;},{passive:false});
+fBtn.addEventListener('touchend',e=>{e.preventDefault();keys.fire=false;},{passive:false});
+lBtn.addEventListener('mousedown',()=>keys.left=true);lBtn.addEventListener('mouseup',()=>keys.left=false);
+rBtn.addEventListener('mousedown',()=>keys.right=true);rBtn.addEventListener('mouseup',()=>keys.right=false);
+fBtn.addEventListener('mousedown',()=>keys.fire=true);fBtn.addEventListener('mouseup',()=>keys.fire=false);
+document.addEventListener('keydown',e=>{if(e.key==='ArrowLeft')keys.left=true;if(e.key==='ArrowRight')keys.right=true;if(e.key===' '){e.preventDefault();keys.fire=true;}if(e.key==='Escape')pauseGame();});
+document.addEventListener('keyup',e=>{if(e.key==='ArrowLeft')keys.left=false;if(e.key==='ArrowRight')keys.right=false;if(e.key===' ')keys.fire=false;});
+
+async function init(){resize();window.addEventListener('resize',resize);buildSprites();drawPixelArt();drawServerBadges();const lb=await getLB();renderLB(lb,'lbStart');}
+
+function drawServerBadge(canvasId){
+  const c=document.getElementById(canvasId);if(!c)return;
+  const cx=c.getContext('2d');
+  const W=32,H=40;
+  cx.clearRect(0,0,W,H);
+
+  // head
+  cx.fillStyle='#f5c800';
+  cx.beginPath();cx.arc(16,8,7,0,Math.PI*2);cx.fill();
+  // face
+  cx.fillStyle='#0a0a0f';
+  cx.fillRect(12,6,3,2); cx.fillRect(18,6,3,2); // eyes
+  cx.fillRect(13,10,6,1); // smile
+  // collar / neck
+  cx.fillStyle='#fff';cx.fillRect(14,14,4,3);
+  // body (jacket)
+  cx.fillStyle='#1a1a3a';cx.fillRect(9,17,14,12);
+  // lapels
+  cx.fillStyle='#fff';
+  cx.fillRect(9,17,3,8);cx.fillRect(20,17,3,8);
+  // bow tie
+  cx.fillStyle='#f5c800';
+  cx.fillRect(14,17,4,3);
+  // buttons
+  cx.fillStyle='#f5c800';
+  cx.fillRect(15,22,2,2);cx.fillRect(15,26,2,2);
+  // tray arm
+  cx.fillStyle='#c89f00';cx.fillRect(23,20,5,2);
+  // tray
+  cx.fillStyle='#888';cx.fillRect(24,16,7,3);
+  // plate on tray
+  cx.fillStyle='#fff';cx.fillRect(25,14,5,3);
+  // N logo on plate
+  cx.fillStyle='#f5c800';cx.fillRect(26,14,3,3);
+  cx.fillStyle='#0a0a0f';cx.fillRect(26,14,1,3);cx.fillRect(28,14,1,3);cx.fillRect(27,15,1,1);
+  // legs
+  cx.fillStyle='#1a1a3a';cx.fillRect(11,29,4,8);cx.fillRect(17,29,4,8);
+  // shoes
+  cx.fillStyle='#111';cx.fillRect(10,36,5,4);cx.fillRect(16,36,5,4);
+}
+
+function drawServerBadges(){drawServerBadge('serverBadge1');drawServerBadge('serverBadge2');}
+init();
+</script>
+</body>
+</html>
