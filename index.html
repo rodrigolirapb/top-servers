@@ -431,8 +431,7 @@ document.getElementById('subScore').addEventListener('click',async()=>{
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){errEl.textContent='Please enter a valid email address.';errEl.style.display='block';return;}
   errEl.style.display='none';
   document.getElementById('subScore').textContent='SAVING...';
-  await saveLB({name,email,score,level,ts:Date.now()});
-  const lb=await getLB();
+  const lb=await saveLB({name,email,score,level,ts:Date.now()});
   renderLB(lb,'lbAfter');
   showScreen('sLB');
   document.getElementById('subScore').textContent='SUBMIT SCORE';
