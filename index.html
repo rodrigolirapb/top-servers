@@ -456,11 +456,13 @@ function exportCSV(lb){
 
 // ── events ───────────────────────────────────────────────────────────────────
 document.getElementById('startBtn').addEventListener('click',startGame);
+document.getElementById('rulesBtn').addEventListener('click',()=>showScreen('sRules'));
+document.getElementById('rulesBackBtn').addEventListener('click',()=>{showScreen('sStart');getLB().then(lb=>renderLB(lb,'lbStart')).catch(()=>{});});
+document.getElementById('skipScore').addEventListener('click',()=>{showScreen('sStart');getLB().then(lb=>renderLB(lb,'lbStart')).catch(()=>{});});
 document.getElementById('pauseBtn').addEventListener('click',pauseGame);
 document.getElementById('endBtn').addEventListener('click',()=>{if(state==='playing'||state==='paused')endGame();});
 document.getElementById('resumeBtn').addEventListener('click',resumeGame);
 document.getElementById('pauseEndBtn').addEventListener('click',endGame);
-document.getElementById('skipScore').addEventListener('click',startGame);
 document.getElementById('paBtn').addEventListener('click',startGame);
 
 document.getElementById('subScore').addEventListener('click',async()=>{
